@@ -1,3 +1,9 @@
+#
+#
+# Usage:
+#   ssh 192.168.100.199 "sudo tcpdump -n -i eth1" | ruby protocols.rb 
+#
+
 line = ""
 count=0
 protocols = Hash.new
