@@ -1,0 +1,112 @@
+
+line = ""
+count=0
+time_slot = 0
+time_slot_prev = 0
+count_port = Hash.new
+count_port["TCP"] = Hash.new(0)
+count_port["UDP"] = Hash.new(0)
+count_dstIP = Hash.new
+count_dstport = Hash.new
+count_srcIP = Hash.new
+count_packets = Hash.new(0)
+
+while (line != nil) do
+  line = STDIN.gets
+
+  if (line == nil) then
+    next
+  end
+
+  data = line.split(" ")
+
+  if (data == []) then
+    next
+  end
+
+  if (data[1] != "IP") then
+    next
+  end
+
+  src = data[2]
+  dst = data[4]
+
+  if (src.index("172.23") != 0) then
+  next # Skip if src does not includes "172.23....."
+  end
+  # Afterhere, Only prcessed for 172.23....
+  ##########################
+tmp1 = src.split(".")
+tmp2 = dst.split(".")
+
+   src_ip = tmp1[0,4].join(".")
+   src_port = tmp1[4]
+   dst_ip = tmp2[0,4].join(".")
+   dst_port = tmp2[4].to_i
+
+  if (data[5] == "TCP" or data[5] == "UDP" or data[5] == "ICMP") then
+    proto = data[5]
+  elsif (data[5] == "UDP,") then
+    proto = "UDP"
+  elsif (data[5] == "Flags") then
+    proto = "TCP"
+  elsif (data[5] == "NBT") then # File server
+    proto = "UDP"
+  elsif (data[5] =~ /[0-9]+++/) then # DNS
+    proto = "UDP"
+  else
+    next
+  end
+
+  time = data[0].to_f
+  size = data[-1]
+
+  time_slot = time.to_i / 900 # 15min x 60 sec
+  time_slot_prev = time_slot
+###
+#(2)# Based on Source IP
+count_dstIP[src_ip] = Array.new if (count_dstIP[src_ip] == nil)
+count_dstIP[src_ip].push(dst_ip)
+#(3)Based on srcIP the then number of Distintion Port
+count_dstport[src_ip] = Array.new if (count_dstport[dst_port] == nil)
+count_dstport[src_ip].push(dst_port)
+
+#(4)Counting Packet
+count_packets[src_ip] += 1
+
+tmp_pktsize = line.scan(/length ([0-9]+)/)
+#p line
+#p tmp_pktsize
+if (tmp_pktsize != nil) then
+  pktsize = tmp_pktsize[0]
+  if (pktsize == nil) then
+      pktsize = 0
+  else
+      pktsize = tmp_pktsize
+  end
+end
+###
+src_ips = count_dstport.keys
+src_ips = count_dstIP.keys
+i= 1
+src_ips.each  { |src_ip|
+  printf("%s, %s, %s, %s, %s, %s,\n",
+    i,
+    src_ip,
+    #count_dstIP[src_ip].uniq.count,
+    count_dstIP[src_ip].uniq.count,
+    count_dstport[src_ip],
+    count_dstport[src_ip].count,
+    count_packets[src_ip]
+
+  )
+
+# break if (i == 20)
+i += 1
+}
+end
+
+count_dstIP = Hash.new
+count_port["src_ip"] = Hash.new(0)
+count_port["dst_ip"] = Hash.new(0)
+  #count_srcIP = Hash.new
