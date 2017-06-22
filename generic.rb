@@ -44,28 +44,23 @@ protocols = Hash.new
 while (line != nil) do
   line = STDIN.gets
   src_ip, src_port, dst_ip, dst_port, size = parse_tcpdump(line)
-  if (src_ip == nil) then
-    next
-  end
+  next if (src_ip == nil)
+  next if (src_ip.index("172.16") != 0)
 
   # To regulate targe traffic from KIC to server
-  if (src_ip.index("172.16") == 0) then
 #    p line
 #    p src_ip
 #    p src_port
 #    protocols[dst_port] += 1
-    if (protocols[dst_port] == nil) then
-      protocols[dst_port] = Hash.new
-      protocols[dst_port]["user"] = Array.new
-      protocols[dst_port]["packet"] = 0
-      protocols[dst_port]["size"] = 0
-    end
-    protocols[dst_port]["user"] |= [src_ip]
-    protocols[dst_port]["packet"] += 1
-    protocols[dst_port]["size"] += size.to_i
-
-#p protocols
+  if (protocols[dst_port] == nil) then
+    protocols[dst_port] = Hash.new
+    protocols[dst_port]["user"] = Array.new
+    protocols[dst_port]["packet"] = 0
+    protocols[dst_port]["size"] = 0
   end
+  protocols[dst_port]["user"] |= [src_ip]
+  protocols[dst_port]["packet"] += 1
+  protocols[dst_port]["size"] += size.to_i
 
   if (count%1000 == 0) then
     protocols.each_pair do |k,v|
